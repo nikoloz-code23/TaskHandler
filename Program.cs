@@ -1,4 +1,6 @@
-﻿namespace TaskTracker;
+﻿using TaskTracker.Application;
+
+namespace TaskTracker;
 
 public class Program 
 { 

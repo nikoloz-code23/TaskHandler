@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using TaskTracker.Handlers;
 
-namespace TaskTracker;
+namespace TaskTracker.Application;
 
 public class App
 {
