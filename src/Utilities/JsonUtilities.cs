@@ -28,32 +28,24 @@ public static class JsonUtilities
         }
         catch (JsonException)
         {
-            Console.WriteLine("The file contains invalid JSON.");
-            throw;
+            Console.WriteLine("The JSON is invalid.");
+            return;
         }
         
-        JsonArray? jsonArray;
+        JsonArray jsonArray;
         
         try
         {
-            jsonArray = jsonNode?.AsArray();   
+            jsonArray = jsonNode!.AsArray();   
         }
         catch (InvalidOperationException)
         {
             Console.WriteLine("The JSON does not contain an array.");
-            throw;
+            return;
         }
         
         string serializedObj = JsonSerializer.Serialize(obj);
-        
-        try
-        {
-            jsonArray?.Add(JsonNode.Parse(serializedObj));
-        }
-        catch (NullReferenceException e)
-        {
-            Console.WriteLine(e);
-        }
+        jsonArray.Add(JsonNode.Parse(serializedObj));
 
         string jsonString = jsonArray!.ToJsonString(JsonOptions);
         File.WriteAllText(filePath, jsonString);
