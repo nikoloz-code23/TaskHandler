@@ -13,33 +13,49 @@ public static class JsonUtilities
         WriteIndented = true
     };
 
-    public static void AddElement<T>(string filePath, T obj)
+    public static void AddElementToArray<T>(string filePath, T obj)
     {
         if (!File.Exists(filePath))
         {
-            FileUtilities.CreateFile(filePath, JsonSerializer.Serialize("[]"));
+            FileUtilities.CreateFile(filePath, "[]");
         }
 
-        JsonNode? jsonNode = null;
+        JsonNode? jsonNode;
 
         try
         {
             jsonNode = JsonNode.Parse(File.ReadAllText(filePath));
-            jsonNode ??= JsonNode.Parse("");  
         }
-        catch (JsonException e)
+        catch (JsonException)
         {
-            Console.WriteLine($"Invalid JSON String encountered: {e}");
+            Console.WriteLine("The file contains invalid JSON.");
             throw;
         }
         
-        JsonArray? jsonArray = jsonNode?.AsArray();
-        jsonArray ??= [];
+        JsonArray? jsonArray;
+        
+        try
+        {
+            jsonArray = jsonNode?.AsArray();   
+        }
+        catch (InvalidOperationException)
+        {
+            Console.WriteLine("The JSON does not contain an array.");
+            throw;
+        }
         
         string serializedObj = JsonSerializer.Serialize(obj);
-        jsonArray.Add(JsonNode.Parse(serializedObj));
+        
+        try
+        {
+            jsonArray?.Add(JsonNode.Parse(serializedObj));
+        }
+        catch (NullReferenceException e)
+        {
+            Console.WriteLine(e);
+        }
 
-        var jsonString = jsonArray.ToJsonString(JsonOptions);
+        string jsonString = jsonArray!.ToJsonString(JsonOptions);
         File.WriteAllText(filePath, jsonString);
     }
 }
