@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
@@ -14,9 +15,53 @@ public static class JsonUtilities
         WriteIndented = true
     };
 
+    public static T? GetLastPropertyValue<T>(string filePath, string propertyName)
+    {
+        if(!File.Exists(filePath)) return default;
+
+        string? fileData = File.ReadAllText(filePath);
+
+        JsonNode? jsonNode;
+
+        try
+        {
+            jsonNode = JsonNode.Parse(fileData);
+        }
+        catch (JsonException e)
+        {
+            Console.WriteLine($"The JSON is invalid: {e}");
+            throw;
+        }
+
+        JsonArray jsonArray;
+        
+        try
+        {
+            jsonArray = jsonNode!.AsArray();   
+        }
+        catch (InvalidOperationException e)
+        {
+            Console.WriteLine($"The JSON does not contain an array: {e}");
+            throw;
+        }
+
+        JsonObject? jsonObj;
+
+        if (jsonArray.Count > 0)
+            jsonObj = jsonArray[jsonArray.Count - 1]?.AsObject();
+        else
+            return default;
+        
+        if (jsonObj == null) return default;
+
+        T? value = jsonObj[propertyName]!.GetValue<T>();
+        if (value == null) throw new InvalidOperationException("No property of that name exists.");
+
+        return value;
+    }
+
     public static void AddElementToArray<T>(string filePath, object obj)
     {
-        // TODO: Work on having functionality for incrementing an ID.
         if (!File.Exists(filePath))
         {
             FileUtilities.CreateFile(filePath, "[]");
@@ -108,11 +153,8 @@ public static class JsonUtilities
             {
                 //TODO: Make it so it won't overwrite certain properties.
                 elementsInJson[i] = newData;
-    
                 string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
-                
                 File.WriteAllText(filePath, newJsonString);
-                
                 Console.WriteLine($"Element {valueToSearch} updated succesfully!");
             }
         }
