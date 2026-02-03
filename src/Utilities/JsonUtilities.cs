@@ -100,7 +100,7 @@ public static class JsonUtilities
         Console.WriteLine("New element added succesfully!");
     }
 
-    public static void UpdateElementInArray<T>(string filePath, object valueToSearch, T newData, string fieldName)
+    public static void UpdateElementInArray<T>(string filePath, object valueToSearch, T newData, string propertyName)
     {
         string? fileData = null;
 
@@ -141,7 +141,7 @@ public static class JsonUtilities
             if (element == null) continue;
 
             Type type = element.GetType();
-            PropertyInfo? field = type.GetProperty(fieldName);
+            PropertyInfo? field = type.GetProperty(propertyName);
             if (field == null)
             {
                 Console.WriteLine("Property doesn't exist! Aborting.");
@@ -149,9 +149,8 @@ public static class JsonUtilities
             }
             object? value = field.GetValue(element);
 
-            if (value != null && value.Equals(valueToSearch))
+            if (value != null && value.Equals(valueToSearch)) // TODO: WORK ON UPDATING ONLY ONE ELEMENT AND UPDATED AT PART.
             {
-                //TODO: Make it so it won't overwrite certain properties.
                 elementsInJson[i] = newData;
                 string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
                 File.WriteAllText(filePath, newJsonString);
