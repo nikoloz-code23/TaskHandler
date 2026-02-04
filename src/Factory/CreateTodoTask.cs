@@ -2,7 +2,6 @@ using System;
 using TaskTracker.Types;
 using TaskTracker.Enums;
 using TaskTracker.Utilities;
-using System.Threading.Tasks;
 
 namespace TaskTracker.Factory;
 

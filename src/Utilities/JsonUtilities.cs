@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -14,6 +12,9 @@ public static class JsonUtilities
     {
         WriteIndented = true
     };
+
+    public static string IdPropertyName {get; set;} = "Id";
+    public static string UpdatePropertyName {get; set; } = "UpdatedAt";
 
     public static T? GetLastPropertyValue<T>(string filePath, string propertyName)
     {
@@ -100,7 +101,7 @@ public static class JsonUtilities
         Console.WriteLine("New element added succesfully!");
     }
 
-    public static void UpdateElementInArray<T>(string filePath, object valueToSearch, T newData, string propertyName)
+    public static void UpdateElementInArray<T>(string filePath, object idSearch, object newData, string propertyName)
     {
         string? fileData = null;
 
@@ -113,14 +114,14 @@ public static class JsonUtilities
             Console.WriteLine(e);
         }
 
-        List<T>? elementsInJson;                
+        IList<T>? elementsInJson;                
         
         if (fileData == null)
             throw new ArgumentNullException("Can't access file data");
 
         try
         {
-            elementsInJson = JsonSerializer.Deserialize<List<T>>(fileData);
+            elementsInJson = JsonSerializer.Deserialize<IList<T>>(fileData);
         }
         catch (Exception e)
         {
@@ -133,29 +134,24 @@ public static class JsonUtilities
             Console.WriteLine("There are no elements to update.");
             return;
         }
-
-        for(int i = elementsInJson.Count - 1; i >= 0; i--)
+        
+        foreach(object? element in elementsInJson)
         {
-            object? element = elementsInJson[i];
-
             if (element == null) continue;
 
             Type type = element.GetType();
-            PropertyInfo? field = type.GetProperty(propertyName);
-            if (field == null)
-            {
-                Console.WriteLine("Property doesn't exist! Aborting.");
-                return;
-            }
-            object? value = field.GetValue(element);
+            object? idValue = ObjectUtilities.ReturnValueFromProperty(type, element, IdPropertyName);
 
-            if (value != null && value.Equals(valueToSearch)) // TODO: WORK ON UPDATING ONLY ONE ELEMENT AND UPDATED AT PART.
-            {
-                elementsInJson[i] = newData;
-                string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
-                File.WriteAllText(filePath, newJsonString);
-                Console.WriteLine($"Element {valueToSearch} updated succesfully!");
-            }
+            if (!Equals(idValue, idSearch))
+                continue;
+
+            ObjectUtilities.SetValueInProperty(type, element, propertyName, newData);
+            ObjectUtilities.SetValueInProperty(type, element, UpdatePropertyName, DateTime.Now);
+
+            Console.WriteLine($"Element {idValue} updated succesfully!");            
         }
+
+        string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
+        File.WriteAllText(filePath, newJsonString);
     }
 }
