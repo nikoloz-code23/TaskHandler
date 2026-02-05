@@ -50,6 +50,8 @@ public class InputHandler
         {
             string argString = BuildTextArg(inputList, firstIndex, secondIndex);
             inputList.RemoveRange(firstIndex, secondIndex - firstIndex + 1);
+            argString = argString.Replace(""+TextMark, "");
+            
             inputList.Insert(firstIndex, argString);
         }
     
