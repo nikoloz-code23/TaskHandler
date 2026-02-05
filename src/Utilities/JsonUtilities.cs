@@ -6,17 +6,17 @@ using System.Text.Json.Nodes;
 
 namespace TaskTracker.Utilities;
 
-public static class JsonUtilities
+public class JsonUtilities
 {
-    public static JsonSerializerOptions JsonOptions { get; set; } = new() 
+    public JsonSerializerOptions JsonOptions { get; set; } = new() 
     {
         WriteIndented = true
     };
 
-    public static string IdPropertyName {get; set;} = "Id";
-    public static string UpdatePropertyName {get; set; } = "UpdatedAt";
+    public string IdPropertyName {get; set;} = "";
+    public string UpdatePropertyName {get; set; } = "";
 
-    public static T? GetLastPropertyValue<T>(string filePath, string propertyName)
+    public T? GetLastPropertyValue<T>(string filePath, string propertyName)
     {
         if(!File.Exists(filePath)) return default;
 
@@ -61,7 +61,7 @@ public static class JsonUtilities
         return value;
     }
 
-    public static void AddElementToArray<T>(string filePath, object obj)
+    public void AddElementToArray<T>(string filePath, object obj)
     {
         if (!File.Exists(filePath))
         {
@@ -101,7 +101,7 @@ public static class JsonUtilities
         Console.WriteLine("New element added succesfully!");
     }
 
-    public static void UpdateElementInArray<T>(string filePath, object idSearch, object newData, string propertyName)
+    public void UpdateElementInArray<T>(string filePath, object idSearch, object newData, string propertyName)
     {
         string? fileData = null;
 
@@ -149,6 +149,60 @@ public static class JsonUtilities
             ObjectUtilities.SetValueInProperty(type, element, UpdatePropertyName, DateTime.Now);
 
             Console.WriteLine($"Element {idValue} updated succesfully!");            
+        }
+
+        string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
+        File.WriteAllText(filePath, newJsonString);
+    }
+
+    public void RemoveElementInArray<T>(string filePath, object idSearch)
+    {
+        string? fileData = null;
+
+        try
+        {
+            fileData = File.ReadAllText(filePath);
+        }
+        catch (FileNotFoundException e)
+        {
+            Console.WriteLine(e);
+        }
+
+        IList<T>? elementsInJson;                
+        
+        if (fileData == null)
+            throw new ArgumentNullException("Can't access file data");
+
+        try
+        {
+            elementsInJson = JsonSerializer.Deserialize<IList<T>>(fileData);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+
+        if (elementsInJson == null || elementsInJson.Count == 0)
+        {
+            Console.WriteLine("There are no elements to update.");
+            return;
+        }
+        
+        for(int i = elementsInJson.Count - 1; i >= 0; i--)
+        {
+            object? element = elementsInJson[i];
+            if(element == null) continue;
+        
+            Type type = element.GetType();
+            object? idValue = ObjectUtilities.ReturnValueFromProperty(type, element, IdPropertyName);
+
+            if (!Equals(idValue, idSearch))
+                continue;
+
+            elementsInJson.RemoveAt(i);
+
+            Console.WriteLine($"Element with Id {idSearch} has been deleted succesfully!");
         }
 
         string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
