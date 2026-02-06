@@ -7,16 +7,17 @@ namespace TaskTracker.Factory;
 
 public class TodoTaskFactory
 {
-    public static int Id { get; set; }
+    public static int Id { get; set; } = 0;
 
-    public TodoTaskFactory(string filePath, JsonUtilities jsonUtilities, string idPropertyName)
+    public TodoTaskFactory(string filePath, JsonUtilities jsonUtilities)
     {
-        int? IdFromJson = jsonUtilities.GetLastPropertyValue<int>(filePath, idPropertyName);
+        int? IdFromJson = jsonUtilities.GetLastPropertyValue<int?>(filePath, jsonUtilities.IdPropertyName);
         
-        if (IdFromJson.Equals(null) || IdFromJson.Equals(default(int))) 
-            Id = 0;
-        else 
-            Id = (int)++IdFromJson;
+        if (IdFromJson != null)
+        {
+            Id = (int)IdFromJson;
+            Id++;
+        }
     }
 
     public TodoTask CreateTodoTask(string description, TodoTaskStatus status)
@@ -25,7 +26,7 @@ public class TodoTaskFactory
         task.Id = Id;
         task.Description = description;
         task.Status = status;
-        task.CreatedAt = DateTime.Now;
+        task.CreatedAt = DateTime.Now.ToString();
         task.UpdatedAt = null;
 
         Id++;
