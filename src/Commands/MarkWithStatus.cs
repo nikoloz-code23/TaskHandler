@@ -6,22 +6,24 @@ using TaskTracker.Enums;
 
 namespace TaskTracker.Commands;
 
-public class MarkDone : ICommand {
+public class MarkWithStatus : ICommand {
     public int? Id { get; set; } = null;
+    public TodoTaskStatus NewStatus { get; set; }
 
-    public MarkDone(int id)
+    public MarkWithStatus(int id, TodoTaskStatus status)
     {
         Id = id;
+        NewStatus = status;
     }
 
     public void Execute(string filePath, JsonUtilities jsonUtilities)
     {
         if (Id == null)
         {
-            Console.WriteLine("Specify the id of the element to remove.");
+            Console.WriteLine("Specify the id of the element to change status of.");
             return;
         }
 
-        jsonUtilities.UpdateElementInArray<TodoTask>(filePath, Id, TodoTaskStatus.DONE, "Status");
+        jsonUtilities.UpdateElementInArray<TodoTask>(filePath, Id, NewStatus, "Status");
     }
 }
