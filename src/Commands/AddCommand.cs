@@ -9,17 +9,17 @@ namespace TaskTracker.Commands;
 
 public class AddCommand : ICommand {
     public TodoTaskFactory? Factory { get; set; }
-    public string Description { get; set; } = "";
+    public string Description { get; set; } = string.Empty;
 
     public AddCommand(string description, TodoTaskFactory factory)
     {
-        Description = description;
+        Description = description.Trim();
         Factory = factory;
     }
 
     public void Execute(string filePath, JsonUtilities jsonUtilities)
     {
-        if (Description.Equals(""))
+        if (Description == string.Empty)
         {
             Console.WriteLine("Add a description!");
             return;

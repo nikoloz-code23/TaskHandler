@@ -7,9 +7,9 @@ using TaskTracker.Enums;
 namespace TaskTracker.Commands;
 
 public class MarkDone : ICommand {
-    public object? Id { get; set; }
+    public int? Id { get; set; } = null;
 
-    public MarkDone(object id)
+    public MarkDone(int id)
     {
         Id = id;
     }

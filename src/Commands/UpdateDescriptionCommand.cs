@@ -7,14 +7,14 @@ namespace TaskTracker.Commands;
 
 public class UpdateDescriptionCommand : ICommand {
     public object? Id { get; set; }
-    public object? NewDescription { get; set; }
-    public string? DescriptionProperty { get; set; }
+    public string NewDescription { get; set; } = string.Empty;
+    public string DescriptionProperty { get; set; } = string.Empty;
 
-    public UpdateDescriptionCommand(object id, object newDesc, string descriptionProp)
+    public UpdateDescriptionCommand(object id, string newDesc, string descriptionProp)
     {
         Id = id;
-        NewDescription = newDesc;
-        DescriptionProperty = descriptionProp;
+        NewDescription = newDesc.Trim();
+        DescriptionProperty = descriptionProp.Trim();
     }
 
     public void Execute(string filePath, JsonUtilities jsonUtilities)
@@ -25,13 +25,13 @@ public class UpdateDescriptionCommand : ICommand {
             return;
         }
 
-        if (NewDescription == null)
+        if (NewDescription == string.Empty)
         {
             Console.WriteLine("Specify the new description that you want to update your element with.");
             return;
         }
 
-        if (DescriptionProperty == null)
+        if (DescriptionProperty == string.Empty)
         {
             Console.WriteLine("Specify what is the property name of Description.");
             return;

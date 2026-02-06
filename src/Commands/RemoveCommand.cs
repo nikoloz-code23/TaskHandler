@@ -6,9 +6,9 @@ using TaskTracker.Utilities;
 namespace TaskTracker.Commands;
 
 public class RemoveCommand : ICommand {
-    public object? Id { get; set; }
+    public int? Id { get; set; } = null;
 
-    public RemoveCommand(object id)
+    public RemoveCommand(int id)
     {
         Id = id;
     }

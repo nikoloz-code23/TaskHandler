@@ -7,9 +7,9 @@ using TaskTracker.Enums;
 namespace TaskTracker.Commands;
 
 public class MarkInProgressCommand : ICommand {
-    public object? Id { get; set; }
+    public int? Id { get; set; } = null; 
 
-    public MarkInProgressCommand(object id)
+    public MarkInProgressCommand(int id)
     {
         Id = id;
     }
