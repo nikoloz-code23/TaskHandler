@@ -146,7 +146,7 @@ public class JsonUtilities
                 continue;
 
             ObjectUtilities.SetValueInProperty(type, element, propertyName, newData);
-            ObjectUtilities.SetValueInProperty(type, element, UpdatePropertyName, DateTime.Now);
+            ObjectUtilities.SetValueInProperty(type, element, UpdatePropertyName, DateTime.Now.ToString());
 
             Console.WriteLine($"Element {idValue} updated succesfully!");            
         }
