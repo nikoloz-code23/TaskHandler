@@ -21,17 +21,14 @@ public class AddCommand : ICommand {
     {
         if (Description == string.Empty)
         {
-            Console.WriteLine("Add a description!");
+            Console.WriteLine("Add a description for the task.");
             return;
         }
 
         if(Factory == null)
-        {
-            Console.WriteLine("Factory not detected. Please pass the factory.");
-            return;
-        }
+            throw new Exception("Factory not detected. Something has went terribly wrong! Aborting.");
 
-        TodoTask todoTask = Factory.CreateTodoTask(Description, TodoTaskStatus.TODO);
+        TodoTask todoTask = Factory.CreateTodoTask(Description.Trim(), TodoTaskStatus.TODO);
         jsonUtilities.AddElementToArray<TodoTask>(filePath, todoTask);
     }
 }
