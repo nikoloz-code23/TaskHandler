@@ -4,6 +4,7 @@ using TaskTracker.Handlers;
 using TaskTracker.Commands;
 using TaskTracker.Utilities;
 using TaskTracker.Factory;
+using TaskTracker.Enums;
 
 namespace TaskTracker.Application;
 
@@ -88,7 +89,7 @@ public class App
                         continue;    
                     }
 
-                    MarkInProgressCommand markInProgressCommand = new(int.Parse(inputList[1]));
+                    MarkWithStatus markInProgressCommand = new(int.Parse(inputList[1]), TodoTaskStatus.IN_PROGRESS);
                     markInProgressCommand.Execute(FilePath, jsonUtilities);
                 break;
 
@@ -99,7 +100,7 @@ public class App
                         continue;    
                     }
 
-                    MarkDone markDoneCommand = new(int.Parse(inputList[1]));
+                    MarkWithStatus markDoneCommand = new(int.Parse(inputList[1]), TodoTaskStatus.DONE);
                     markDoneCommand.Execute(FilePath, jsonUtilities);
                 break;
 
@@ -114,10 +115,24 @@ public class App
                     removeCommand.Execute(FilePath, jsonUtilities);
                 break;
 
+                case "list":
+                    if(inputList.Count < 2)
+                    {
+                        ListCommand listCommand = new();
+                        listCommand.Execute(FilePath, jsonUtilities);
+                    }
+                    else
+                    {
+                        string inputCommand = inputList[1];
+                        ListCommandFilter listCommandFilter = new(inputCommand);
+                        listCommandFilter.Execute(FilePath, jsonUtilities);
+                    }
+                break;
+
                 case "help":
                     Console.WriteLine(
                     """
-                    =======    Task-Cli     ========
+                    =======     Welcome!    ========
                     - add -> Adds a new task! Takes a description of your task for adding.
                     - update -> Updates an already existing task! Takes an id and a new description.
                     - mark-in-proress -> Updates the task status to "In-Progress". Takes an id.
@@ -132,6 +147,10 @@ public class App
                 default:
                     Console.WriteLine("Command doesn't exist! Use 'help' to check available commands.");
                 break;
+
+                case "exit":
+                    Console.WriteLine($"Thanks for using {AppName}! Exitiing...");
+                    return;
             }
         }
         
