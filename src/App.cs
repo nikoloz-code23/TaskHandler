@@ -42,7 +42,7 @@ public class App
         jsonUtilities.IdPropertyName = "Id";
         jsonUtilities.UpdatePropertyName = "UpdatedAt";
 
-        TodoTaskFactory factory = new(FilePath, jsonUtilities, "Id");
+        TodoTaskFactory factory = new(FilePath, jsonUtilities);
 
         while(true)
         {
@@ -57,36 +57,80 @@ public class App
 
             string command = inputList[0].ToLower();
 
-            for(int i = 0; i < inputList.Count; i++)
-            {
-                Console.WriteLine($"{i}: {inputList[i]}");
-            }
-
             switch(command)
             {
                 case "add":
+                    if(inputList.Count < 2)
+                    {
+                        Console.WriteLine("Add command requires an argument for description!");
+                        continue;    
+                    }
+
                     AddCommand addCommand = new(inputList[1], factory);
                     addCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "update":
+                    if(inputList.Count < 3)
+                    {
+                        Console.WriteLine("Update command requires an argument for an id and a new description!");
+                        continue;    
+                    }
+
                     UpdateDescriptionCommand updateDescriptionCommand = new(int.Parse(inputList[1]), inputList[2], "Description");
                     updateDescriptionCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "mark-in-progress":
+                    if(inputList.Count < 2)
+                    {
+                        Console.WriteLine("Update command requires an argument for an id!");
+                        continue;    
+                    }
+
                     MarkInProgressCommand markInProgressCommand = new(int.Parse(inputList[1]));
                     markInProgressCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "mark-done":
+                    if(inputList.Count < 2)
+                    {
+                        Console.WriteLine("Update command requires an argument for an id!");
+                        continue;    
+                    }
+
                     MarkDone markDoneCommand = new(int.Parse(inputList[1]));
                     markDoneCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "delete":
+                    if(inputList.Count < 2)
+                    {
+                        Console.WriteLine("Update command requires an argument for an id!");
+                        continue;    
+                    }
+
                     RemoveCommand removeCommand = new(int.Parse(inputList[1]));
                     removeCommand.Execute(FilePath, jsonUtilities);
+                break;
+
+                case "help":
+                    Console.WriteLine(
+                    """
+                    =======    Task-Cli     ========
+                    - add -> Adds a new task! Takes a description of your task for adding.
+                    - update -> Updates an already existing task! Takes an id and a new description.
+                    - mark-in-proress -> Updates the task status to "In-Progress". Takes an id.
+                    - mark-done -> Updates the task status to "Done". Takes an id.
+                    - delete -> Deletes a task from the list. Takes an id.
+                    - list -> Lists all tasks. If you add "done", "todo" or "in-progress", will list by status.
+                    ======= Enjoy using it! ========
+                    """
+                    );
+                break;
+
+                default:
+                    Console.WriteLine("Command doesn't exist! Use 'help' to check available commands.");
                 break;
             }
         }
