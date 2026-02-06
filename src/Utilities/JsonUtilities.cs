@@ -208,4 +208,60 @@ public class JsonUtilities
         string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
         File.WriteAllText(filePath, newJsonString);
     }
+
+    public void ListElementInArray(string filePath)
+    {
+        string? fileData = null;
+
+        try
+        {
+            fileData = File.ReadAllText(filePath);
+        }
+        catch (FileNotFoundException e)
+        {
+            Console.WriteLine(e);
+        }
+
+        if (fileData == null)
+            throw new ArgumentNullException("Can't access file data");
+
+        JsonArray jsonArray = JsonNode.Parse(fileData)!.AsArray();
+
+        foreach(var element in jsonArray)
+        {
+            if (element == null) continue;
+            Console.WriteLine(element.ToString());
+        }
+    }
+
+    public void ListElementInArray(string filePath, string propertyName, object valueToFilterWith)
+    {
+        string? fileData = null;
+
+        try
+        {
+            fileData = File.ReadAllText(filePath);
+        }
+        catch (FileNotFoundException e)
+        {
+            Console.WriteLine(e);
+        }
+
+        if (fileData == null)
+            throw new ArgumentNullException("Can't access file data");
+
+        JsonArray jsonArray = JsonNode.Parse(fileData)!.AsArray();
+
+        // The solution here is specifically for int based statuses in a JSON.
+        // TODO: Find a way to generalize the solution here so we can list with more filters.
+        int checkValue = (int)valueToFilterWith;
+        foreach(var element in jsonArray)
+        {
+            if (element == null || element[propertyName] == null) continue;
+            
+            int elementValue = (int)element[propertyName]!;
+            if(elementValue != checkValue) continue;
+            Console.WriteLine(element.ToString());
+        }
+    }
 }
