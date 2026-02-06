@@ -58,6 +58,7 @@ public class App
 
             string command = inputList[0].ToLower();
 
+            // Kind of an ugly solution, but it works for what I need.
             switch(command)
             {
                 case "add":
