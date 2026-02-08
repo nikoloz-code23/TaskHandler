@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using TaskTracker.Types;
 using TaskTracker.Interfaces;
 using TaskTracker.Utilities;
@@ -12,7 +13,7 @@ public class RemoveCommand : ICommand {
     {
         Id = id;
     }
-    public void Execute(string filePath, JsonUtilities jsonUtilities)
+    public async Task Execute(string filePath, JsonUtilities jsonUtilities)
     {
         if (Id == null)
         {
@@ -20,6 +21,6 @@ public class RemoveCommand : ICommand {
             return;
         }
 
-        jsonUtilities.RemoveElementInArray<TodoTask>(filePath, Id);
+        await jsonUtilities.RemoveElementInArray<TodoTask>(filePath, Id);
     }
 }

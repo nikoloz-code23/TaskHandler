@@ -5,6 +5,7 @@ using TaskTracker.Commands;
 using TaskTracker.Utilities;
 using TaskTracker.Factory;
 using TaskTracker.Enums;
+using System.Threading.Tasks;
 
 namespace TaskTracker.Application;
 
@@ -32,7 +33,7 @@ public class App
         AppNameSuffix = nameSuffix;
     }
 
-    public void Run(char textMark = '"')
+    public async Task Run(char textMark = '"')
     {
         string appPrefix = AppName + AppNameSuffix + ' '; 
 
@@ -43,7 +44,8 @@ public class App
         jsonUtilities.IdPropertyName = "Id";
         jsonUtilities.UpdatePropertyName = "UpdatedAt";
 
-        TodoTaskFactory factory = new(FilePath, jsonUtilities);
+        TodoTaskFactory factory = new();
+        await factory.InitializeFactory(FilePath, jsonUtilities);
 
         while(true)
         {
@@ -56,7 +58,7 @@ public class App
 
             inputHandler.HandleInput(inputList);
 
-            string command = inputList[0].ToLower();
+            string command = inputList[0].ToLower().Trim();
 
             // Kind of an ugly solution, but it works for what I need.
             switch(command)
@@ -69,7 +71,7 @@ public class App
                     }
 
                     AddCommand addCommand = new(inputList[1], factory);
-                    addCommand.Execute(FilePath, jsonUtilities);
+                    await addCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "update":
@@ -80,7 +82,7 @@ public class App
                     }
 
                     UpdateDescriptionCommand updateDescriptionCommand = new(int.Parse(inputList[1]), inputList[2], "Description");
-                    updateDescriptionCommand.Execute(FilePath, jsonUtilities);
+                    await updateDescriptionCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "mark-in-progress":
@@ -91,7 +93,7 @@ public class App
                     }
 
                     MarkWithStatus markInProgressCommand = new(int.Parse(inputList[1]), TodoTaskStatus.IN_PROGRESS);
-                    markInProgressCommand.Execute(FilePath, jsonUtilities);
+                    await markInProgressCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "mark-done":
@@ -102,7 +104,7 @@ public class App
                     }
 
                     MarkWithStatus markDoneCommand = new(int.Parse(inputList[1]), TodoTaskStatus.DONE);
-                    markDoneCommand.Execute(FilePath, jsonUtilities);
+                    await markDoneCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "delete":
@@ -113,20 +115,20 @@ public class App
                     }
 
                     RemoveCommand removeCommand = new(int.Parse(inputList[1]));
-                    removeCommand.Execute(FilePath, jsonUtilities);
+                    await removeCommand.Execute(FilePath, jsonUtilities);
                 break;
 
                 case "list":
                     if(inputList.Count < 2)
                     {
                         ListCommand listCommand = new();
-                        listCommand.Execute(FilePath, jsonUtilities);
+                        await listCommand.Execute(FilePath, jsonUtilities);
                     }
                     else
                     {
                         string inputCommand = inputList[1];
                         ListCommandFilter listCommandFilter = new(inputCommand);
-                        listCommandFilter.Execute(FilePath, jsonUtilities);
+                        await listCommandFilter.Execute(FilePath, jsonUtilities);
                     }
                 break;
 
@@ -140,6 +142,8 @@ public class App
                     - mark-done -> Updates the task status to "Done". Takes an id.
                     - delete -> Deletes a task from the list. Takes an id.
                     - list -> Lists all tasks. If you add "done", "todo" or "in-progress", will list by status.
+                    - help -> Help with the application.
+                    - exit -> Exit the application.
                     ======= Enjoy using it! ========
                     """
                     );

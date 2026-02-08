@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using TaskTracker.Types;
 using TaskTracker.Enums;
 using TaskTracker.Utilities;
@@ -9,9 +10,11 @@ public class TodoTaskFactory
 {
     public static int Id { get; set; } = 0;
 
-    public TodoTaskFactory(string filePath, JsonUtilities jsonUtilities)
+    public TodoTaskFactory() { }
+
+    public async Task InitializeFactory(string filePath, JsonUtilities jsonUtilities)
     {
-        int? IdFromJson = jsonUtilities.GetLastPropertyValue<int?>(filePath, jsonUtilities.IdPropertyName);
+        int? IdFromJson = await jsonUtilities.GetLastPropertyValue<int?>(filePath, jsonUtilities.IdPropertyName);
         
         if (IdFromJson != null)
         {

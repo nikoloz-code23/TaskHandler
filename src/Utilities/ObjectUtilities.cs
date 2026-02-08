@@ -13,6 +13,7 @@ public static class ObjectUtilities
             Console.WriteLine($"{propertyName} does not exist.");
             return null;
         }
+
         return property.GetValue(obj);
     }
 
@@ -24,7 +25,7 @@ public static class ObjectUtilities
             Console.WriteLine($"{propertyName} does not exist! Aborting.");
             return;
         }
-        
+
         property.SetValue(obj, newValue);
     } 
 }

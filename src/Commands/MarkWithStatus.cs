@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using TaskTracker.Types;
 using TaskTracker.Interfaces;
 using TaskTracker.Utilities;
@@ -16,7 +17,7 @@ public class MarkWithStatus : ICommand {
         NewStatus = status;
     }
 
-    public void Execute(string filePath, JsonUtilities jsonUtilities)
+    public async Task Execute(string filePath, JsonUtilities jsonUtilities)
     {
         if (Id == null)
         {
@@ -24,6 +25,6 @@ public class MarkWithStatus : ICommand {
             return;
         }
 
-        jsonUtilities.UpdateElementInArray<TodoTask>(filePath, Id, NewStatus, "Status");
+        await jsonUtilities.UpdateElementInArrayAsync<TodoTask>(filePath, Id, NewStatus, "Status");
     }
 }

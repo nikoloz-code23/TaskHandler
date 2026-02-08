@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 
 namespace TaskTracker.Utilities;
 
@@ -10,23 +12,23 @@ public class JsonUtilities
 {
     public JsonSerializerOptions JsonOptions { get; set; } = new() 
     {
-        WriteIndented = true
+        WriteIndented = true,
     };
 
     public string IdPropertyName {get; set;} = "";
     public string UpdatePropertyName {get; set; } = "";
 
-    public T? GetLastPropertyValue<T>(string filePath, string propertyName)
+    public async Task<T?> GetLastPropertyValue<T>(string filePath, string propertyName)
     {
         if(!File.Exists(filePath)) return default;
-
-        string? fileData = File.ReadAllText(filePath);
+        
+        using FileStream fileData = File.OpenRead(filePath);
 
         JsonNode? jsonNode;
 
         try
         {
-            jsonNode = JsonNode.Parse(fileData);
+            jsonNode = await JsonNode.ParseAsync(fileData);
         }
         catch (JsonException e)
         {
@@ -34,17 +36,7 @@ public class JsonUtilities
             throw;
         }
 
-        JsonArray jsonArray;
-        
-        try
-        {
-            jsonArray = jsonNode!.AsArray();   
-        }
-        catch (InvalidOperationException e)
-        {
-            Console.WriteLine($"The JSON does not contain an array: {e}");
-            throw;
-        }
+        var jsonArray = jsonNode!.AsArray();   
 
         JsonObject? jsonObj;
 
@@ -60,23 +52,50 @@ public class JsonUtilities
 
         return value;
     }
+    
+    public async Task<JsonNode?> SerializeAndReturnJsonNode(object obj)
+    {
+        using (MemoryStream memoryStream = new())
+        {
+            await JsonSerializer.SerializeAsync(memoryStream, obj);
+            memoryStream.Position = 0;
+            return await JsonNode.ParseAsync(memoryStream);
+        }
+    }
 
-    public void AddElementToArray<T>(string filePath, object obj)
+    public async Task WriteNewDataToFile(string filePath, JsonNode jsonData)
+    {
+        string newJsonContentsString = jsonData.ToJsonString(JsonOptions);
+        await File.WriteAllTextAsync(filePath, newJsonContentsString);
+    } 
+
+    public async Task AddElementToArrayAsync<T>(string filePath, object obj)
     {
         if (!File.Exists(filePath))
         {
-            FileUtilities.CreateFile(filePath, "[]");
+            await FileUtilities.CreateFileAsync(filePath, "[]");
         }
 
-        JsonNode? jsonNode;
+        JsonNode? oldJsonContent;
 
         try
         {
-            jsonNode = JsonNode.Parse(File.ReadAllText(filePath));
+            using FileStream fs = File.OpenRead(filePath);
+            oldJsonContent = await JsonNode.ParseAsync(fs);
         }
         catch (JsonException e)
         {
             Console.WriteLine($"The JSON is invalid: {e}");
+            throw;
+        }
+        catch (FileNotFoundException e)
+        {
+            Console.WriteLine($"File doesn't exist! {e}");
+            return;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
             throw;
         }
         
@@ -84,51 +103,50 @@ public class JsonUtilities
         
         try
         {
-            jsonArray = jsonNode!.AsArray();   
+            jsonArray = oldJsonContent!.AsArray();   
         }
         catch (InvalidOperationException e)
         {
             Console.WriteLine($"The JSON does not contain an array: {e}");
             throw;
         }
+
+        JsonNode? newElement = await SerializeAndReturnJsonNode(obj);
+
+        if(newElement == null)
+            throw new NoNullAllowedException("Something went wrong. Aborting!");
         
-        string serializedObj = JsonSerializer.Serialize(obj);
-        jsonArray.Add(JsonNode.Parse(serializedObj));
-
-        string jsonString = jsonArray!.ToJsonString(JsonOptions);
-        File.WriteAllText(filePath, jsonString);
-
-        Console.WriteLine("New element added succesfully!");
+        jsonArray.Add(newElement);
+        await WriteNewDataToFile(filePath, jsonArray);
+        Console.WriteLine("New element added succesfully!");    
     }
 
-    public void UpdateElementInArray<T>(string filePath, object idSearch, object newData, string propertyName)
+
+    public async Task UpdateElementInArrayAsync<T>(string filePath, object idSearch, object newData, string propertyName)
     {
-        string? fileData = null;
+        IList<T>? elementsInJson;    
 
         try
         {
-            fileData = File.ReadAllText(filePath);
+            using FileStream fs = File.OpenRead(filePath);
+            elementsInJson = await JsonSerializer.DeserializeAsync<IList<T>>(fs);
         }
         catch (FileNotFoundException e)
         {
-            Console.WriteLine(e);
+            Console.WriteLine($"File doesn't exist! {e}");
+            return;
         }
-
-        IList<T>? elementsInJson;                
-        
-        if (fileData == null)
-            throw new ArgumentNullException("Can't access file data");
-
-        try
+        catch (JsonException e)
         {
-            elementsInJson = JsonSerializer.Deserialize<IList<T>>(fileData);
+            Console.WriteLine($"The JSON is invalid: {e}");
+            throw;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             throw;
         }
-
+        
         if (elementsInJson == null || elementsInJson.Count == 0)
         {
             Console.WriteLine("There are no elements to update.");
@@ -147,35 +165,37 @@ public class JsonUtilities
 
             ObjectUtilities.SetValueInProperty(type, element, propertyName, newData);
             ObjectUtilities.SetValueInProperty(type, element, UpdatePropertyName, DateTime.Now.ToString());
-
+            
             Console.WriteLine($"Element {idValue} updated succesfully!");            
         }
 
-        string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
-        File.WriteAllText(filePath, newJsonString);
+
+        JsonNode? newJsonContents = await SerializeAndReturnJsonNode(elementsInJson);
+
+        if(newJsonContents == null)
+            throw new NoNullAllowedException("Something went clearly wrong during Parsing process. Aborting!");
+
+        await WriteNewDataToFile(filePath, newJsonContents);
     }
 
-    public void RemoveElementInArray<T>(string filePath, object idSearch)
+    public async Task RemoveElementInArray<T>(string filePath, object idSearch)
     {
-        string? fileData = null;
+        IList<T>? elementsInJson;    
 
         try
         {
-            fileData = File.ReadAllText(filePath);
+            using FileStream fs = File.OpenRead(filePath);
+            elementsInJson = await JsonSerializer.DeserializeAsync<IList<T>>(fs);
         }
         catch (FileNotFoundException e)
         {
-            Console.WriteLine(e);
+            Console.WriteLine($"File doesn't exist! {e}");
+            return;
         }
-
-        IList<T>? elementsInJson;                
-        
-        if (fileData == null)
-            throw new ArgumentNullException("Can't access file data");
-
-        try
+        catch (JsonException e)
         {
-            elementsInJson = JsonSerializer.Deserialize<IList<T>>(fileData);
+            Console.WriteLine($"The JSON is invalid: {e}");
+            throw;
         }
         catch (Exception e)
         {
@@ -185,7 +205,7 @@ public class JsonUtilities
 
         if (elementsInJson == null || elementsInJson.Count == 0)
         {
-            Console.WriteLine("There are no elements to update.");
+            Console.WriteLine("There are no elements to remove.");
             return;
         }
         
@@ -202,30 +222,50 @@ public class JsonUtilities
 
             elementsInJson.RemoveAt(i);
 
+            await Task.Delay(100);
             Console.WriteLine($"Element with Id {idSearch} has been deleted succesfully!");
         }
 
-        string newJsonString = JsonSerializer.Serialize(elementsInJson, JsonOptions);
-        File.WriteAllText(filePath, newJsonString);
+        JsonNode? newJsonContents = await SerializeAndReturnJsonNode(elementsInJson);
+
+        if(newJsonContents == null)
+            throw new NoNullAllowedException("Something went clearly wrong during Parsing process. Aborting!");
+
+        await WriteNewDataToFile(filePath, newJsonContents);
     }
 
-    public void ListElementInArray(string filePath)
+    public async Task ListElementInArray(string filePath)
     {
-        string? fileData = null;
+        JsonNode? oldJsonContent;
 
         try
         {
-            fileData = File.ReadAllText(filePath);
+            using FileStream fs = File.OpenRead(filePath);
+            oldJsonContent = await JsonNode.ParseAsync(fs);
         }
         catch (FileNotFoundException e)
         {
+            Console.WriteLine($"File doesn't exist! {e}");
+            return;
+        }
+        catch (JsonException e)
+        {
+            Console.WriteLine($"The JSON is invalid: {e}");
+            throw;
+        }
+        catch (Exception e)
+        {
             Console.WriteLine(e);
+            throw;
         }
 
-        if (fileData == null)
-            throw new ArgumentNullException("Can't access file data");
-
-        JsonArray jsonArray = JsonNode.Parse(fileData)!.AsArray();
+        if(oldJsonContent == null)
+        {
+            Console.WriteLine("There are no elements to list.");
+            return;
+        }
+        
+        JsonArray jsonArray = oldJsonContent.AsArray();
 
         foreach(var element in jsonArray)
         {
@@ -234,23 +274,38 @@ public class JsonUtilities
         }
     }
 
-    public void ListElementInArray(string filePath, string propertyName, object valueToFilterWith)
+    public async Task ListElementInArray(string filePath, string propertyName, object valueToFilterWith)
     {
-        string? fileData = null;
+        JsonNode? oldJsonContent;
 
         try
         {
-            fileData = File.ReadAllText(filePath);
+            using FileStream fs = File.OpenRead(filePath);
+            oldJsonContent = await JsonNode.ParseAsync(fs);
         }
         catch (FileNotFoundException e)
         {
+            Console.WriteLine($"File doesn't exist! {e}");
+            return;
+        }
+        catch (JsonException e)
+        {
+            Console.WriteLine($"The JSON is invalid: {e}");
+            throw;
+        }
+        catch (Exception e)
+        {
             Console.WriteLine(e);
+            throw;
         }
 
-        if (fileData == null)
-            throw new ArgumentNullException("Can't access file data");
-
-        JsonArray jsonArray = JsonNode.Parse(fileData)!.AsArray();
+        if(oldJsonContent == null)
+        {
+            Console.WriteLine("There are no elements to list.");
+            return;
+        }
+        
+        JsonArray jsonArray = oldJsonContent.AsArray();
 
         // The solution here is specifically for int based statuses in a JSON.
         // TODO: Find a way to generalize the solution here so we can list with more filters.

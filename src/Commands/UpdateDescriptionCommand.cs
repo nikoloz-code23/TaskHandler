@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using TaskTracker.Types;
 using TaskTracker.Interfaces;
 using TaskTracker.Utilities;
@@ -17,7 +18,7 @@ public class UpdateDescriptionCommand : ICommand {
         DescriptionProperty = descriptionProp.Trim();
     }
 
-    public void Execute(string filePath, JsonUtilities jsonUtilities)
+    public async Task Execute(string filePath, JsonUtilities jsonUtilities)
     {
         if (Id == null)
         {
@@ -37,6 +38,6 @@ public class UpdateDescriptionCommand : ICommand {
             return;
         }
 
-        jsonUtilities.UpdateElementInArray<TodoTask>(filePath, Id, NewDescription, DescriptionProperty);
+        await jsonUtilities.UpdateElementInArrayAsync<TodoTask>(filePath, Id, NewDescription, DescriptionProperty);
     }
 }

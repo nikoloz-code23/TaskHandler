@@ -4,6 +4,7 @@ using TaskTracker.Enums;
 using TaskTracker.Interfaces;
 using TaskTracker.Utilities;
 using TaskTracker.Factory;
+using System.Threading.Tasks;
 
 namespace TaskTracker.Commands;
 
@@ -17,7 +18,7 @@ public class AddCommand : ICommand {
         Factory = factory;
     }
 
-    public void Execute(string filePath, JsonUtilities jsonUtilities)
+    public async Task Execute(string filePath, JsonUtilities jsonUtilities)
     {
         if (Description == string.Empty)
         {
@@ -29,6 +30,6 @@ public class AddCommand : ICommand {
             throw new Exception("Factory not detected. Something has went terribly wrong! Aborting.");
 
         TodoTask todoTask = Factory.CreateTodoTask(Description.Trim(), TodoTaskStatus.TODO);
-        jsonUtilities.AddElementToArray<TodoTask>(filePath, todoTask);
+        await jsonUtilities.AddElementToArrayAsync<TodoTask>(filePath, todoTask);
     }
 }

@@ -1,13 +1,14 @@
 using System.IO;
+using System.Threading.Tasks;
 
 namespace TaskTracker.Utilities;
 
 public static class FileUtilities
 {
-    public static void CreateFile(string filePath, string defaultString = "")
+    public static async Task CreateFileAsync(string filePath, string defaultString = "")
     {
         using (File.Create(filePath)) {};
         if (defaultString.Equals("")) return;
-        File.WriteAllText(filePath, defaultString);
+        await File.WriteAllTextAsync(filePath, defaultString);
     }
 }
