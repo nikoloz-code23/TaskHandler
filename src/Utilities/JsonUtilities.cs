@@ -18,7 +18,7 @@ public class JsonUtilities
     public string IdPropertyName {get; set;} = "";
     public string UpdatePropertyName {get; set; } = "";
 
-    public async Task<T?> GetLastPropertyValue<T>(string filePath, string propertyName)
+    public async Task<T?> GetLastPropertyValueAsync<T>(string filePath, string propertyName)
     {
         if(!File.Exists(filePath)) return default;
         
@@ -53,7 +53,7 @@ public class JsonUtilities
         return value;
     }
     
-    public async Task<JsonNode?> SerializeAndReturnJsonNode(object obj)
+    public async Task<JsonNode?> SerializeAndReturnJsonNodeAsync(object obj)
     {
         using (MemoryStream memoryStream = new())
         {
@@ -63,7 +63,7 @@ public class JsonUtilities
         }
     }
 
-    public async Task WriteNewDataToFile(string filePath, JsonNode jsonData)
+    public async Task WriteNewDataToFileAsync(string filePath, JsonNode jsonData)
     {
         string newJsonContentsString = jsonData.ToJsonString(JsonOptions);
         await File.WriteAllTextAsync(filePath, newJsonContentsString);
@@ -111,16 +111,15 @@ public class JsonUtilities
             throw;
         }
 
-        JsonNode? newElement = await SerializeAndReturnJsonNode(obj);
+        JsonNode? newElement = await SerializeAndReturnJsonNodeAsync(obj);
 
         if(newElement == null)
             throw new NoNullAllowedException("Something went wrong. Aborting!");
         
         jsonArray.Add(newElement);
-        await WriteNewDataToFile(filePath, jsonArray);
+        await WriteNewDataToFileAsync(filePath, jsonArray);
         Console.WriteLine("New element added succesfully!");    
     }
-
 
     public async Task UpdateElementInArrayAsync<T>(string filePath, object idSearch, object newData, string propertyName)
     {
@@ -170,15 +169,15 @@ public class JsonUtilities
         }
 
 
-        JsonNode? newJsonContents = await SerializeAndReturnJsonNode(elementsInJson);
+        JsonNode? newJsonContents = await SerializeAndReturnJsonNodeAsync(elementsInJson);
 
         if(newJsonContents == null)
             throw new NoNullAllowedException("Something went clearly wrong during Parsing process. Aborting!");
 
-        await WriteNewDataToFile(filePath, newJsonContents);
+        await WriteNewDataToFileAsync(filePath, newJsonContents);
     }
 
-    public async Task RemoveElementInArray<T>(string filePath, object idSearch)
+    public async Task RemoveElementInArrayAsync<T>(string filePath, object idSearch)
     {
         IList<T>? elementsInJson;    
 
@@ -226,15 +225,15 @@ public class JsonUtilities
             Console.WriteLine($"Element with Id {idSearch} has been deleted succesfully!");
         }
 
-        JsonNode? newJsonContents = await SerializeAndReturnJsonNode(elementsInJson);
+        JsonNode? newJsonContents = await SerializeAndReturnJsonNodeAsync(elementsInJson);
 
         if(newJsonContents == null)
             throw new NoNullAllowedException("Something went clearly wrong during Parsing process. Aborting!");
 
-        await WriteNewDataToFile(filePath, newJsonContents);
+        await WriteNewDataToFileAsync(filePath, newJsonContents);
     }
 
-    public async Task ListElementInArray(string filePath)
+    public async Task ListElementInArrayAsync(string filePath)
     {
         JsonNode? oldJsonContent;
 
@@ -274,7 +273,7 @@ public class JsonUtilities
         }
     }
 
-    public async Task ListElementInArray(string filePath, string propertyName, object valueToFilterWith)
+    public async Task ListElementInArrayAsync(string filePath, string propertyName, object valueToFilterWith)
     {
         JsonNode? oldJsonContent;
 

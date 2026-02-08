@@ -21,6 +21,6 @@ public class RemoveCommand : ICommand {
             return;
         }
 
-        await jsonUtilities.RemoveElementInArray<TodoTask>(filePath, Id);
+        await jsonUtilities.RemoveElementInArrayAsync<TodoTask>(filePath, Id);
     }
 }

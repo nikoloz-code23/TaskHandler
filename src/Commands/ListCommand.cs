@@ -7,6 +7,6 @@ namespace TaskTracker.Commands;
 public class ListCommand : ICommand {
     public async Task Execute(string filePath, JsonUtilities jsonUtilities)
     {
-        await jsonUtilities.ListElementInArray(filePath);
+        await jsonUtilities.ListElementInArrayAsync(filePath);
     }
 }

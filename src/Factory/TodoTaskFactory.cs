@@ -14,7 +14,7 @@ public class TodoTaskFactory
 
     public async Task InitializeFactory(string filePath, JsonUtilities jsonUtilities)
     {
-        int? IdFromJson = await jsonUtilities.GetLastPropertyValue<int?>(filePath, jsonUtilities.IdPropertyName);
+        int? IdFromJson = await jsonUtilities.GetLastPropertyValueAsync<int?>(filePath, jsonUtilities.IdPropertyName);
         
         if (IdFromJson != null)
         {
